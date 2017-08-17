@@ -2,8 +2,8 @@
 #include <stdlib.h>
 
 #define ALPHA 0.031
-#define NUMBER_OF_EXAMPLES 3
-#define NUMBER_OF_VARIABLES 4
+#define NUMBER_OF_EXAMPLES 5
+#define NUMBER_OF_VARIABLES 6
 
 typedef struct TrainingSet{
 	int n_examples;
@@ -22,14 +22,18 @@ int main(){
 			NUMBER_OF_EXAMPLES,
 			NUMBER_OF_VARIABLES,
 			{
-				{0.0,3.0,0.0,4.0},
-				{0.0,2.0,3.0,1.0},
-				{0.0,5.0,-9.0,7.0}
+				{0.0,1,-1,1,0,0},
+				{0.0,0,1,-1,1,0},
+				{0.0,0,0,1,-1,1},
+				{0.0,1,0,0,1,-1},
+				{0.0,-1,1,0,0,1}
 			},
 			{
-				7.0,
-				9.0,
-				8.0
+				1,
+				2,
+				3,
+				4,
+				5
 			}
 	};
 	double * thea = InitThea(T.n_variables);
@@ -65,10 +69,10 @@ int main(){
 			test.examples[i][j] = input[i][j];
 		}
 	}
-	
+
 	for(int i = 0; i < n_input; i++){
-		double result = Hypothesis(thea,i,&test);
-		printf("Predict result for example[%d]: %lf\n",i+1,result);
+			double result = Hypothesis(thea,i,&test);
+			printf("Predict result for example[%d]: %lf\n",i+1,result);
 	}
 	return 0;
 }
@@ -82,17 +86,22 @@ double * InitThea(int n){
 }
 
 double * MinimizeJ(double * thea,double alpha, Set * T){
+	int index = 0;
 	while(1){
 		double * temp = (double*)malloc(T->n_variables*sizeof(double));
-		for(int i = 0; i< T->n_variables; i++){
+		for(int i = 0; i< NUMBER_OF_VARIABLES; i++){
 			temp[i] = thea[i] - alpha * DifferentialOfJ(thea,i,T);
 		}
 		
-		if(temp[1]==thea[1])break;
+		for(index = 0; index<NUMBER_OF_VARIABLES; index++){
+			if(temp[index]!=0)break;
+		}
 
-		for(int i = 0; i< T->n_variables; i++){
+		if(temp[index] == thea[index])break;
+
+		for(int i = 0; i< NUMBER_OF_VARIABLES; i++){
 			thea[i] = temp[i];
-			//printf("thea[%d] = %f\t",i,thea[i]);
+		//	printf("thea[%d] = %lf\t",i,thea[i]);
 		}
 		//printf("\n");
 	}
@@ -107,9 +116,9 @@ double DifferentialOfJ(double * thea,int column, Set * T){
 				*
 				T->examples[i][column];
 	}
-	//printf("sum = %f\n",sum);
+	//printf("sum = %lf\n",sum);
 	sum = sum/T->n_examples;
-	//printf("differential of cost function = %f\n",sum);
+	//printf("differential of cost function = %lf\n",sum);
 	return sum;
 }
 
@@ -118,6 +127,6 @@ double Hypothesis(double * thea, int row, Set * T){
 	for(int i = 0; i<T->n_variables; i++){
 		ret = ret + ( thea[i] * T->examples[row][i]);
 	}
-	//printf("Hypothesis(x%d) = %f\n",row,ret);
+	//printf("Hypothesis(x%d) = %lf\n",row,ret);
 	return ret;
 }
