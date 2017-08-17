@@ -9,24 +9,41 @@ typedef struct TrainingSet{
 	int n_examples;
 	int n_variables;
 	double examples[NUMBER_OF_EXAMPLES][NUMBER_OF_VARIABLES];
-	double results[NUMBER_OF_EXAMPLES];
+	double labels[NUMBER_OF_EXAMPLES];
 }Set;
 
 double Hypothesis(double * thea, int row, Set * T);
-double DifferentialOfJ(double * thea,int column, Set * T);
+double PartialDerivativeOfJ(double * thea,int column, Set * T);
 double * MinimizeJ(double * thea, double alpha, Set * T);
 double * InitThea(int n);
 
 int main(){
+	int n_switch = 0;
+	double d_switch = 0.0;
+	while(1){
+		printf("press \'1\' for GradientDescent, \'2\' for slove equations: ");
+		scanf(" %d",&n_switch);
+		if(n_switch == 1 || n_switch == 2)break;
+	}
+	
+	switch(n_switch){
+		case 1: 
+				d_switch = 1.1;
+				break;
+		case 2: 
+				d_switch = 0.0;
+				break;
+	}
+
 	Set T = {
 			NUMBER_OF_EXAMPLES,
 			NUMBER_OF_VARIABLES,
 			{
-				{0.0,1,-1,1,0,0},
-				{0.0,0,1,-1,1,0},
-				{0.0,0,0,1,-1,1},
-				{0.0,1,0,0,1,-1},
-				{0.0,-1,1,0,0,1}
+				{d_switch,1,-1,1,0,0},
+				{d_switch,0,1,-1,1,0},
+				{d_switch,0,0,1,-1,1},
+				{d_switch,1,0,0,1,-1},
+				{d_switch,-1,1,0,0,1}
 			},
 			{
 				1,
@@ -90,7 +107,7 @@ double * MinimizeJ(double * thea,double alpha, Set * T){
 	while(1){
 		double * temp = (double*)malloc(T->n_variables*sizeof(double));
 		for(int i = 0; i< NUMBER_OF_VARIABLES; i++){
-			temp[i] = thea[i] - alpha * DifferentialOfJ(thea,i,T);
+			temp[i] = thea[i] - alpha * PartialDerivativeOfJ(thea,i,T);
 		}
 		
 		for(index = 0; index<NUMBER_OF_VARIABLES; index++){
@@ -108,11 +125,11 @@ double * MinimizeJ(double * thea,double alpha, Set * T){
 	return thea;
 }
 
-double DifferentialOfJ(double * thea,int column, Set * T){
+double PartialDerivativeOfJ(double * thea,int column, Set * T){
 	double sum = 0.0f;
 	for(int i = 0; i<T->n_examples; i++){
 		sum = sum + 
-				(Hypothesis(thea,i,T)-T->results[i])
+				(Hypothesis(thea,i,T)-T->labels[i])
 				*
 				T->examples[i][column];
 	}
@@ -124,8 +141,8 @@ double DifferentialOfJ(double * thea,int column, Set * T){
 
 double Hypothesis(double * thea, int row, Set * T){
 	double ret = 0.0f;
-	for(int i = 0; i<T->n_variables; i++){
-		ret = ret + ( thea[i] * T->examples[row][i]);
+	for(int i = 0; i<NUMBER_OF_VARIABLES; i++){
+		ret = ret + (thea[i] * T->examples[row][i]);
 	}
 	//printf("Hypothesis(x%d) = %lf\n",row,ret);
 	return ret;
