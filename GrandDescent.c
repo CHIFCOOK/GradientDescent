@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define ALPHA 0.031
+#define ALPHA 0.0666
 #define NUMBER_OF_EXAMPLES 5
 #define NUMBER_OF_VARIABLES 6
 
@@ -14,8 +14,19 @@ typedef struct TrainingSet{
 
 double Hypothesis(double * thea, int row, Set * T);
 double PartialDerivativeOfJ(double * thea,int column, Set * T);
-double * MinimizeJ(double * thea, double alpha, Set * T);
+double * MainRepeat(double * thea, double alpha, Set * T);
 double * InitThea(int n);
+
+void print(Set * T){
+	for(int i = 0; i<NUMBER_OF_EXAMPLES; i++){
+		for(int j = 0; j<NUMBER_OF_VARIABLES;j++){
+			printf("x[%d][%d] = %lf ; ",i,j,T->examples[i][j]);
+		}
+		printf(" | y[%d] = %lf\n",i,T->labels[i]);
+	}
+}
+
+Set * FeatureScaling(Set * T);
 
 int main(){
 	int n_switch = 0;
@@ -28,7 +39,7 @@ int main(){
 	
 	switch(n_switch){
 		case 1: 
-				d_switch = 1.1;
+				d_switch = 1.0;
 				break;
 		case 2: 
 				d_switch = 0.0;
@@ -39,11 +50,11 @@ int main(){
 			NUMBER_OF_EXAMPLES,
 			NUMBER_OF_VARIABLES,
 			{
-				{d_switch,1,-1,1,0,0},
-				{d_switch,0,1,-1,1,0},
-				{d_switch,0,0,1,-1,1},
-				{d_switch,1,0,0,1,-1},
-				{d_switch,-1,1,0,0,1}
+				{d_switch,2,13,5,7,7},
+				{d_switch,67,5,7,6,3},
+				{d_switch,13,5,82,34,12},
+				{d_switch,21,30,67,12,13},
+				{d_switch,-13,21,60,30,81}
 			},
 			{
 				1,
@@ -54,11 +65,16 @@ int main(){
 			}
 	};
 	double * thea = InitThea(T.n_variables);
+	printf("Feature Scaling...\n");
+//--------------------------------------------------
+	FeatureScaling(&T);
+//--------------------------------------------------
+	print(&T);
 	printf("Caculating...\n");
-	MinimizeJ(thea,ALPHA,&T);
+	MainRepeat(thea,ALPHA,&T);
 	
 	for(int i = 0; i<NUMBER_OF_VARIABLES; i++){			
-		printf("thea[%d] = %lf\t",i,thea[i]);
+		printf("thea[%d] = %lf ; ",i,thea[i]);
 	}
 	printf("\n");
 
@@ -86,12 +102,55 @@ int main(){
 			test.examples[i][j] = input[i][j];
 		}
 	}
-
+//----------------------------------------------
+	FeatureScaling(&test);
+//----------------------------------------------
 	for(int i = 0; i < n_input; i++){
 			double result = Hypothesis(thea,i,&test);
 			printf("Predict result for example[%d]: %lf\n",i+1,result);
 	}
 	return 0;
+}
+
+Set * FeatureScaling(Set * T){
+	double max[NUMBER_OF_VARIABLES];
+	double min[NUMBER_OF_VARIABLES];
+	double sum[NUMBER_OF_VARIABLES];
+	double avg[NUMBER_OF_VARIABLES];
+
+	for(int i = 0; i < NUMBER_OF_VARIABLES; i++){
+		max[i] = T->examples[1][i];
+		min[i] = T->examples[1][i];
+		sum[i] = 0;
+		avg[i] = 0;
+	}
+
+	for(int i = 0; i < NUMBER_OF_VARIABLES; i++){
+		for(int j = 0; j < NUMBER_OF_EXAMPLES; j++){
+				sum[i] = sum[i] + T->examples[j][i];
+				if(T->examples[j][i] < min[i]){
+					min[i] = T->examples[j][i];
+				}
+				if(T->examples[j][i] >= max[i]){
+					max[i] = T->examples[j][i];
+				}
+			avg[i] = sum[i]/NUMBER_OF_EXAMPLES;
+		//printf("min[%d] = %lf\t max%d[] = %lf\t avg[%d] = %lf\n",i,min[i],i,max[i],i,avg[i]);
+		} 
+		//printf("----------------\n");
+		if(max[i] == min[i]){
+			max[i] = 1;
+			min[i] = 0;
+		}
+	}
+
+	for(int i = 0; i < NUMBER_OF_VARIABLES; i++){
+		for(int j = 0; j < NUMBER_OF_EXAMPLES; j++){
+				T->examples[j][i] = (T->examples[j][i]-avg[i])/(max[i]-min[i]);
+		}
+	}
+	
+	return T;
 }
 
 double * InitThea(int n){
@@ -102,7 +161,7 @@ double * InitThea(int n){
 	return thea;
 }
 
-double * MinimizeJ(double * thea,double alpha, Set * T){
+double * MainRepeat(double * thea,double alpha, Set * T){
 	int index = 0;
 	while(1){
 		double * temp = (double*)malloc(T->n_variables*sizeof(double));
@@ -118,9 +177,9 @@ double * MinimizeJ(double * thea,double alpha, Set * T){
 
 		for(int i = 0; i< NUMBER_OF_VARIABLES; i++){
 			thea[i] = temp[i];
-		//	printf("thea[%d] = %lf\t",i,thea[i]);
+	//		printf("thea[%d] = %lf; ",i,thea[i]);
 		}
-		//printf("\n");
+	//	printf("\n");
 	}
 	return thea;
 }
